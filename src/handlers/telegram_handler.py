@@ -1,4 +1,5 @@
 import os
+import re
 import logging
 from datetime import datetime
 from ..utils.file_utils import move_file
@@ -74,6 +75,11 @@ class TelegramHandler:
             # 获取文件名
             filename = self._get_filename(media, event.message.message)
 
+            if not re.search("[\u4e00-\u9fff]+", filename) and re.search(
+                r"[\u4e00-\u9fff]+", event.message.message
+            ):
+                filename = event.message.message
+
             # 下载文件
             downloaded_file = await event.message.download_media(file=TELEGRAM_TEMP_DIR)
 
@@ -81,7 +87,12 @@ class TelegramHandler:
                 return False, "文件下载失败"
 
             # 移动文件到目标目录
-            target_path = os.path.join(target_dir, os.path.basename(downloaded_file))
+            ext = os.path.splitext(downloaded_file)[1]
+            target_path = os.path.join(target_dir, f"{filename}{ext}")
+            if os.path.exists(target_path):
+                filename = f"{filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+                target_path = os.path.join(target_dir, filename)
+
             success, result = move_file(downloaded_file, target_path)
 
             if success:
