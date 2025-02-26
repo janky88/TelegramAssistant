@@ -1,4 +1,4 @@
-# VideoScraper - Telegram 视频下载助手
+# TelegramAssistant - Telegram 助手
 
 这是一个基于 Telethon 的 Telegram 机器人，可以自动下载 Telegram 消息中的视频内容和 YouTube 链接。
 
@@ -25,7 +25,7 @@
 
 ```bash
 git clone [repository-url]
-cd VideoScraper
+cd TelegramAssistant
 ```
 
 2. 安装依赖：
