@@ -1,4 +1,1 @@
-FROM shenxianmq/telegram_assistant_env:v1.0.1
-
-
-RUN pip install --no-cache-dir apscheduler
+FROM shenxianmq/video_scraper_env:v1.0.1
