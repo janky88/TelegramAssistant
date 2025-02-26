@@ -5,13 +5,18 @@ WORKDIR /app
 
 # 复制项目文件
 COPY main.py .
-COPY init.py .
-COPY entrypoint.sh .
+COPY src/ src/
 
-# 创建必要的目录（使用绝对路径）
-RUN mkdir -p /app/temp/telegram /app/temp/youtube \
-    && mkdir -p /app/downloads/telegram \
-    && mkdir -p /app/downloads/youtube
+# 创建必要的目录
+RUN mkdir -p \
+    config \
+    downloads/telegram/videos \
+    downloads/telegram/audios \
+    downloads/telegram/photos \
+    downloads/telegram/others \
+    downloads/youtube \
+    temp/telegram \
+    temp/youtube
 
 # 设置脚本权限
 RUN chmod +x entrypoint.sh
