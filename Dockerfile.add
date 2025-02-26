@@ -1,1 +1,1 @@
-FROM shenxianmq/video_scraper_env:v1.0.1
+FROM shenxianmq/telegram_assistant_env:v1.0.1
