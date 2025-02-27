@@ -57,6 +57,7 @@ services:
       - ./downloads/telegram:/app/downloads/telegram
       - ./downloads/youtube:/app/downloads/youtube
       - ./downloads/douyin:/app/downloads/douyin
+      - ./downloads/bilibili:/app/downloads/bilibili
       - ./downloads/temp:/app/temp
 
     restart: unless-stopped
