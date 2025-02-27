@@ -12,18 +12,25 @@ logger = logging.getLogger(__name__)
 class YouTubeHandler:
     def __init__(self, config):
         self.config = config
-        self.yt_format = config["youtube_download"].get("format", "best")
+        self.yt_format = config["youtube_download"].get("format", "bv*+ba/best")
         self.cookies = config["youtube_download"].get("cookies", "")
 
     def _get_ydl_opts(self, temp_cookie_file=None):
         """获取yt-dlp选项"""
         ydl_opts = {
-            "format": self.yt_format,
+            "format": "bv*+ba/best",
             "outtmpl": os.path.join(YOUTUBE_TEMP_DIR, "%(title).100s-%(id)s.%(ext)s"),
             "ignoreerrors": True,
             "ignore_no_formats_error": True,
             "restrictfilenames": True,
             "windowsfilenames": True,
+            "merge_output_format": "mp4",
+            "postprocessors": [
+                {
+                    "key": "FFmpegVideoConvertor",
+                    "preferedformat": "mp4",
+                }
+            ],
         }
 
         # 添加代理配置
