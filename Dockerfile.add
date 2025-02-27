@@ -1,7 +1,7 @@
 FROM shenxianmq/telegram_assistant_env:v1.0.1
 
 # 复制项目文件
-COPY requirements.txt .
+COPY requirements_local.txt .
 
 # 安装Python依赖
 RUN pip install --no-cache-dir -r requirements_local.txt
