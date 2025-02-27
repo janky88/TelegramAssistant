@@ -99,6 +99,8 @@ docker run -d \
   -v $(pwd)/config:/app/config \
   -v $(pwd)/downloads/telegram:/app/downloads/telegram \
   -v $(pwd)/downloads/youtube:/app/downloads/youtube \
+  -v $(pwd)/downloads/bilibili:/app/downloads/bilibili \
+  -v $(pwd)/downloads/douyin:/app/downloads/douyin \
   --restart unless-stopped \
   shenxianmq/telegram_assistant:latest
 
