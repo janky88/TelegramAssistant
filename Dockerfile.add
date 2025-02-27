@@ -4,6 +4,6 @@ FROM shenxianmq/telegram_assistant_env:v1.0.1
 COPY requirements.txt .
 
 # 安装Python依赖
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements_local.txt
 
-RUN rm requirements.txt
+RUN rm requirements_local.txt
