@@ -54,6 +54,7 @@ services:
       - ./config:/app/config
       - ./downloads/telegram:/app/downloads/telegram
       - ./downloads/youtube:/app/downloads/youtube
+      - ./downloads/douyin:/app/downloads/douyin
       - ./downloads/temp:/app/temp
 
     restart: unless-stopped
