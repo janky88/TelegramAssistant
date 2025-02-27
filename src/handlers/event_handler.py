@@ -4,6 +4,7 @@ from telethon import events
 from .telegram_handler import TelegramHandler
 from .youtube_handler import YouTubeHandler
 from .douyin_handler import CustomDouyinHandler
+from .bilibili_handler import BilibiliHandler
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,7 @@ class EventHandler:
         self.douyin_handler = CustomDouyinHandler(
             config.get("douyin", {}).get("cookie")
         )
+        self.bilibili_handler = BilibiliHandler(config.get("bilibili", {}))
 
     def register_handlers(self, client):
         """注册所有事件处理器"""
@@ -29,17 +31,25 @@ class EventHandler:
         async def handle_message(event):
             """处理新消息"""
             try:
+
                 message_text = event.message.text if event.message.text else ""
 
                 # 检查是否是YouTube链接
                 youtube_pattern = r"(https?://)?(www\.)?(youtube\.com|youtu\.be)/.*"
                 douyin_pattern = r"https://v\.douyin\.com/.*?/"
+                bilibili_pattern = r"https://www\.bilibili\.com/video/.*?"
                 is_youtube = bool(re.match(youtube_pattern, message_text))
                 is_douyin = bool(re.search(douyin_pattern, message_text))
+                is_bilibili = (
+                    "bilibili.com" in event.message.text
+                    or "b23.tv" in event.message.text
+                )
                 if is_youtube:
                     await self._handle_youtube_message(event)
                 elif is_douyin:
                     await self._handle_douyin_message(event)
+                elif is_bilibili:
+                    await self.handle_bilibili_message(event)
                 elif event.message.media:
                     await self._handle_telegram_media(event)
 
@@ -106,3 +116,27 @@ class EventHandler:
                 await event.reply(f"❌ 下载失败: {result}")
         except Exception as e:
             await event.reply(f"处理媒体文件时出错: {str(e)}")
+
+    async def handle_bilibili_message(self, message):
+        """处理消息"""
+        try:
+            await message.reply("正在下载B站视频，请稍候...")
+            url = re.findall(
+                r"https://www\.bilibili\.com/video/.*|https://b23\.tv/.*", message.text
+            )
+            if url:
+                video = await self.bilibili_handler.download_video(url[0])
+                if video:
+                    await message.reply(
+                        f"✅ B站视频下载完成！\n"
+                        f"标题: {video.get('title')}\n"
+                        f"保存位置: {video.get('path')}"
+                    )
+                    return True
+            else:
+                await message.reply("下载B站视频失败,请检查链接是否有效")
+                return False
+
+        except Exception as e:
+            await message.reply(f"处理B站视频失败: {str(e)}")
+            return False

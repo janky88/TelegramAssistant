@@ -35,6 +35,9 @@ def load_config():
         "douyin": {
             "cookie": "",
         },
+        "bilibili": {
+            "cookie": "",
+        },
     }
 
     try:

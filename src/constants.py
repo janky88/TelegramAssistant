@@ -24,3 +24,7 @@ YOUTUBE_DEST_DIR = os.path.join(BASE_DIR, "downloads/youtube")
 
 # 抖音目录
 DOUYIN_DEST_DIR = os.path.join(BASE_DIR, "downloads/douyin")
+
+# B站目录
+BILIBILI_TEMP_DIR = os.path.join(TEMP_DIR, "bilibili")
+BILIBILI_DEST_DIR = os.path.join(BASE_DIR, "downloads/bilibili")
