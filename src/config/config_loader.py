@@ -39,6 +39,7 @@ def load_config():
 
     try:
         os.makedirs(CONFIG_DIR, exist_ok=True)
+        config_updated = False
 
         if os.path.exists(config_file):
             with open(config_file, "r", encoding="utf-8") as file:
@@ -47,10 +48,20 @@ def load_config():
                 for key, value in default_config.items():
                     if key not in config:
                         config[key] = value
+                        config_updated = True
                     elif isinstance(value, dict) and isinstance(config[key], dict):
                         for sub_key, sub_value in value.items():
                             if sub_key not in config[key]:
                                 config[key][sub_key] = sub_value
+                                config_updated = True
+
+            # 如果有新增配置项，更新配置文件
+            if config_updated:
+                with open(config_file, "w", encoding="utf-8") as file:
+                    yaml.dump(
+                        config, file, allow_unicode=True, default_flow_style=False
+                    )
+                logger.info("配置文件已更新，新增配置项已添加")
         else:
             config = default_config
             with open(config_file, "w", encoding="utf-8") as file:
