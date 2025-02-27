@@ -4,4 +4,4 @@ FROM shenxianmq/telegram_assistant_env:v1.0.1
 COPY requirements_local.txt .
 
 # 安装Python依赖
-RUN pip install --no-cache-dir apscheduler
+RUN pip install --no-cache-dir -U f2
