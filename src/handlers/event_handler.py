@@ -3,6 +3,7 @@ import logging
 from telethon import events
 from .telegram_handler import TelegramHandler
 from .youtube_handler import YouTubeHandler
+from .douyin_handler import CustomDouyinHandler
 
 logger = logging.getLogger(__name__)
 
@@ -10,8 +11,11 @@ logger = logging.getLogger(__name__)
 class EventHandler:
     def __init__(self, config):
         self.config = config
-        self.telegram_handler = TelegramHandler()
+        self.telegram_handler = TelegramHandler(config)
         self.youtube_handler = YouTubeHandler(config)
+        self.douyin_handler = CustomDouyinHandler(
+            config.get("douyin", {}).get("cookie")
+        )
 
     def register_handlers(self, client):
         """注册所有事件处理器"""
@@ -29,16 +33,39 @@ class EventHandler:
 
                 # 检查是否是YouTube链接
                 youtube_pattern = r"(https?://)?(www\.)?(youtube\.com|youtu\.be)/.*"
+                douyin_pattern = r"https://v\.douyin\.com/.*?/"
                 is_youtube = bool(re.match(youtube_pattern, message_text))
-
+                is_douyin = bool(re.search(douyin_pattern, message_text))
                 if is_youtube:
                     await self._handle_youtube_message(event)
+                elif is_douyin:
+                    await self._handle_douyin_message(event)
                 elif event.message.media:
                     await self._handle_telegram_media(event)
 
             except Exception as e:
                 logger.error(f"处理消息时出错: {str(e)}")
                 await event.reply(f"处理消息时出错: {str(e)}")
+
+    async def _handle_douyin_message(self, event):
+        try:
+            match = re.findall(r"https?://v\.douyin\.com/.*?/", event.message.text)
+            if match:
+                await event.reply(f"开始下载抖音视频: {match[0]}")
+                url = match[0]
+                video = await self.douyin_handler.download_video(url)
+                if video:
+                    await event.reply(
+                        f"✅ 抖音视频下载完成！\n"
+                        f"标题: {video.get('desc')}\n"
+                        f"保存位置: {video.get('dest_path')}"
+                    )
+                else:
+                    await event.reply("无法下载该抖音视频，请检查链接是否有效。")
+            else:
+                await event.reply("无法下载该抖音视频，请检查链接是否有效。")
+        except Exception as e:
+            await event.reply(f"下载抖音视频时出错: {str(e)}")
 
     async def _handle_youtube_message(self, event):
         """处理YouTube链接消息"""

@@ -6,3 +6,5 @@ config.yaml.example
 downloads/
 temp/
 /config/
+logs/
+*.db

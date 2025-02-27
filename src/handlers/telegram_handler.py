@@ -9,13 +9,15 @@ from ..constants import (
     TELEGRAM_AUDIOS_DIR,
     TELEGRAM_PHOTOS_DIR,
     TELEGRAM_OTHERS_DIR,
+    DOUYIN_DEST_DIR,
 )
 
 logger = logging.getLogger(__name__)
 
 
 class TelegramHandler:
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
         self._ensure_directories()
 
     def _ensure_directories(self):
@@ -26,6 +28,7 @@ class TelegramHandler:
             TELEGRAM_AUDIOS_DIR,
             TELEGRAM_PHOTOS_DIR,
             TELEGRAM_OTHERS_DIR,
+            DOUYIN_DEST_DIR,
         ]:
             os.makedirs(directory, exist_ok=True)
 
