@@ -78,9 +78,9 @@ class TelegramHandler:
             # 获取文件名
             filename = self._get_filename(media, event.message.message)
 
-            if not re.search("[\u4e00-\u9fff]+", filename) and re.search(
-                r"[\u4e00-\u9fff]+", event.message.message
-            ):
+            if (
+                not re.search("[\u4e00-\u9fff]+", filename) or "未命名文件" in filename
+            ) and re.search(r"[\u4e00-\u9fff]+", event.message.message):
                 filename = event.message.message
 
             # 下载文件
