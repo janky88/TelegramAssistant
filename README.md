@@ -229,7 +229,9 @@ downloads/
 │   ├── audios/
 │   ├── photos/
 │   └── others/
-└── youtube/
+├── youtube/
+├── douyin/
+└── bilibili/
 ```
 
 ## 注意事项
@@ -237,6 +239,7 @@ downloads/
 - 请确保配置文件中的 API 密钥和 Token 正确填写
 - YouTube 下载功能需要稳定的网络连接
 - 建议使用代理以提高下载速度和稳定性
+- 抖音和 Bilibili 下载功能需要提供 cookies
 - 文件会按类型自动分类存储
 
 ## 许可证
