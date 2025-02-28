@@ -139,7 +139,7 @@ bot_account:
 
 # YouTube下载配置
 youtube_download:
-  format: "best" # 视频质量，可选：best, worst, bestvideo, bestaudio等
+  format: "bv*+ba/best" # 视频质量，具体参考yt-dlp的格式选择
   cookies: "" # YouTube cookies（可选，用于下载会员内容）
 
 # 定时消息配置，支持多个（可选）
@@ -151,6 +151,14 @@ scheduled_messages:
   - chat_id: "" # 目标群组/频道的ID或用户名
     message: "" # 要发送的消息内容
     time: "08:00" # 每天发送消息的时间，24小时制
+
+# 抖音下载配置
+douyin:
+  cookie: "" # 抖音 cookies（可选，用于下载抖音视频）
+
+# Bilibili下载配置
+bilibili:
+  cookie: "" # Bilibili cookies（可选，用于下载Bilibili视频）
 
 # 日志级别配置
 log_level: "INFO" # 可选：DEBUG, INFO, WARNING, ERROR
