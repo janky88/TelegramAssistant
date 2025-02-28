@@ -18,7 +18,7 @@ class YouTubeHandler:
     def _get_ydl_opts(self, temp_cookie_file=None):
         """获取yt-dlp选项"""
         ydl_opts = {
-            "format": "bv*+ba/best",
+            "format": self.yt_format,
             "outtmpl": os.path.join(YOUTUBE_TEMP_DIR, "%(title).100s-%(id)s.%(ext)s"),
             "ignoreerrors": True,
             "ignore_no_formats_error": True,
