@@ -22,7 +22,7 @@ def load_config():
             "session_name": "bot_session",
         },
         "youtube_download": {
-            "format": "best",
+            "format": "bv*+ba/best",
             "cookies": "",
         },
         "scheduled_messages": [],
