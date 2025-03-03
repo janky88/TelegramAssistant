@@ -96,6 +96,8 @@ class TelegramHandler:
                 filename = f"{filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
                 target_path = os.path.join(target_dir, filename)
 
+            target_path = target_path.replace(ext + ext, ext)
+
             success, result = move_file(downloaded_file, target_path)
 
             if success:
