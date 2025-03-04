@@ -49,7 +49,7 @@ class CustomDouyinHandler:
             filename = f"{desc}_{create}_{nickname}.mp4"
             for root, dirs, files in os.walk(self.download_path):
                 for file in files:
-                    if desc and file[:5] == desc[:5] and nickname and nickname in file:
+                    if desc and file[:2] == desc[:2] and nickname and nickname in file:
                         shutil.move(
                             os.path.join(root, file),
                             os.path.join(DOUYIN_DEST_DIR, filename),
