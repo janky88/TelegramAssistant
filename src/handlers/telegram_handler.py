@@ -58,12 +58,12 @@ class TelegramHandler:
             # 如果没有找到文件名，使用MIME类型生成
             if hasattr(media.document, "mime_type"):
                 ext = media.document.mime_type.split("/")[-1]
-                return f"未命名文件.{ext}"
+                return f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
 
         elif hasattr(media, "photo"):
             return f"photo_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
 
-        return message_text or "未命名文件"
+        return message_text or f"{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     async def process_media(self, event):
         """处理Telegram媒体消息"""
@@ -79,7 +79,8 @@ class TelegramHandler:
             filename = self._get_filename(media, event.message.message)
 
             if (
-                not re.search("[\u4e00-\u9fff]+", filename) or "未命名文件" in filename
+                not re.search("[\u4e00-\u9fff]+", filename)
+                or f"{datetime.now().strftime('%Y%m%d_%H%M%S')}" in filename
             ) and re.search(r"[\u4e00-\u9fff]+", event.message.message):
                 filename = event.message.message
 
