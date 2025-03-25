@@ -3,4 +3,4 @@ FROM shenxianmq/telegram_assistant_env:v1.0.1
 
 
 # 安装Python依赖
-RUN pip install --no-cache-dir -U bilibili-api-python
+RUN pip install --no-cache-dir -U yt-dlp
