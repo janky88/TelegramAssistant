@@ -38,6 +38,7 @@ def load_config():
         "bilibili": {
             "cookie": "",
         },
+        "send_file": False,
     }
 
     try:

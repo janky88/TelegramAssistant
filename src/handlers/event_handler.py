@@ -18,6 +18,7 @@ class EventHandler:
             config.get("douyin", {}).get("cookie")
         )
         self.bilibili_handler = BilibiliHandler(config.get("bilibili", {}))
+        self.send_file = config.get("send_file", False)
 
     def register_handlers(self, client):
         """注册所有事件处理器"""
@@ -70,6 +71,13 @@ class EventHandler:
                         f"标题: {video.get('desc')}\n"
                         f"保存位置: {video.get('dest_path')}"
                     )
+                    if self.send_file:
+                        # 发送文件回用户
+                        await event.client.send_file(
+                            event.chat_id,
+                            video.get("dest_path"),
+                            caption=f"抖音视频: {video.get('desc')}",
+                        )
                 else:
                     await event.reply("无法下载该抖音视频，请检查链接是否有效。")
             else:
@@ -88,6 +96,11 @@ class EventHandler:
 
             if success:
                 await event.reply(f"✅ YouTube视频下载完成！\n" f"保存位置: {result}")
+                if self.send_file:
+                    # 发送文件回用户
+                    await event.client.send_file(
+                        event.chat_id, result, caption="YouTube视频"
+                    )
             else:
                 await event.reply(f"❌ YouTube视频下载失败！\n" f"错误: {result}")
         except Exception as e:
@@ -112,6 +125,13 @@ class EventHandler:
                     f"文件名: {result['filename']}\n"
                     f"保存位置: {result['path']}"
                 )
+                if self.send_file:
+                    # 发送文件回用户
+                    await event.client.send_file(
+                        event.chat_id,
+                        result["path"],
+                        caption=f"{result['type']}文件: {result['filename']}",
+                    )
             else:
                 await event.reply(f"❌ 下载失败: {result}")
         except Exception as e:
@@ -132,6 +152,13 @@ class EventHandler:
                         f"标题: {video.get('title')}\n"
                         f"保存位置: {video.get('path')}"
                     )
+                    if self.send_file:
+                        # 发送文件回用户
+                        await message.client.send_file(
+                            message.chat_id,
+                            video.get("path"),
+                            caption=f"B站视频: {video.get('title')}",
+                        )
                     return True
             else:
                 await message.reply("下载B站视频失败,请检查链接是否有效")
