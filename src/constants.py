@@ -21,6 +21,7 @@ DOWNLOAD_DIR = os.path.join(BASE_DIR, "downloads")
 
 # YouTube目录
 YOUTUBE_DEST_DIR = os.path.join(BASE_DIR, "downloads/youtube")
+YOUTUBE_AUDIO_DIR = os.path.join(BASE_DIR, "downloads/audios")
 
 # 抖音目录
 DOUYIN_DEST_DIR = os.path.join(BASE_DIR, "downloads/douyin")

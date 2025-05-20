@@ -39,6 +39,10 @@ def load_config():
             "cookie": "",
         },
         "send_file": False,
+        "youtube_audio_convert": {
+            "enabled": False,
+            "format": "mp3",
+        },
     }
 
     try:

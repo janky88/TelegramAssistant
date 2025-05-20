@@ -3,8 +3,8 @@ import re
 import logging
 import yt_dlp
 import tempfile
-from ..utils.file_utils import sanitize_filename, move_file
-from ..constants import YOUTUBE_TEMP_DIR, YOUTUBE_DEST_DIR
+from ..utils.file_utils import sanitize_filename, move_file, ensure_dirs
+from ..constants import YOUTUBE_TEMP_DIR, YOUTUBE_DEST_DIR, YOUTUBE_AUDIO_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +14,10 @@ class YouTubeHandler:
         self.config = config
         self.yt_format = config["youtube_download"].get("format", "bv*+ba/best")
         self.cookies = config["youtube_download"].get("cookies", "")
+        self.audio_convert = config.get("youtube_audio_convert", {})
+
+        # 确保目录存在
+        ensure_dirs(YOUTUBE_TEMP_DIR, YOUTUBE_DEST_DIR, YOUTUBE_AUDIO_DIR)
 
     def _get_ydl_opts(self, temp_cookie_file=None):
         """获取yt-dlp选项"""
@@ -32,6 +36,18 @@ class YouTubeHandler:
                 }
             ],
         }
+
+        # 添加音频转换配置
+        if self.audio_convert.get("enabled", False):
+            audio_format = self.audio_convert.get("format", "mp3")
+            logger.info(f"启用YouTube音频转换功能，转换格式: {audio_format}")
+            ydl_opts["postprocessors"].append(
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": audio_format,
+                    "preferredquality": "192",
+                }
+            )
 
         # 添加代理配置
         proxy_config = self.config.get("proxy", {})
@@ -204,17 +220,36 @@ class YouTubeHandler:
         video_id = info["id"]
         video_title = info["title"]
 
+        # 处理下载的所有文件(视频和音频)
+        downloaded_files = []
         for file in os.listdir(YOUTUBE_TEMP_DIR):
-            if video_id in file and file.endswith(info["ext"]):
+            if video_id in file:
                 source_path = os.path.join(YOUTUBE_TEMP_DIR, file)
+                file_ext = os.path.splitext(file)[1][1:]  # 获取扩展名（去掉点）
+
+                # 根据文件类型选择保存目录
+                is_audio = file_ext.lower() in ["mp3", "m4a", "ogg", "wav", "flac"]
+                target_dir = YOUTUBE_AUDIO_DIR if is_audio else YOUTUBE_DEST_DIR
+
                 target_path = os.path.join(
-                    YOUTUBE_DEST_DIR, f"{sanitize_filename(video_title)}.{info['ext']}"
+                    target_dir, f"{sanitize_filename(video_title)}.{file_ext}"
                 )
 
                 success, result = move_file(source_path, target_path)
                 if success:
-                    return True, target_path
+                    downloaded_files.append(target_path)
                 else:
-                    return False, f"移动文件失败: {result}"
+                    logger.error(f"移动文件失败: {result}")
+
+        if downloaded_files:
+            # 如果启用了音频转换，并且有对应格式的音频文件，返回音频文件
+            if self.audio_convert.get("enabled", False):
+                audio_format = self.audio_convert.get("format", "mp3")
+                for file_path in downloaded_files:
+                    if file_path.endswith(f".{audio_format}"):
+                        return True, file_path
+
+            # 否则返回第一个文件（通常是视频文件）
+            return True, downloaded_files[0]
 
         return False, "未找到下载的文件"

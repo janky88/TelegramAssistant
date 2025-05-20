@@ -23,9 +23,27 @@ class EventHandler:
     async def send_video_to_user(self, event, file_path):
         """统一的发送文件方法"""
         if self.send_file:
-            await event.client.send_file(
-                event.chat_id, file_path, supports_streaming=True, force_document=False
+            # 判断是视频还是音频
+            is_audio = file_path.lower().endswith(
+                (".mp3", ".m4a", ".ogg", ".wav", ".flac")
             )
+
+            if is_audio:
+                # 音频文件
+                await event.client.send_file(
+                    event.chat_id,
+                    file_path,
+                    force_document=False,
+                    attributes=[],  # 音频属性
+                )
+            else:
+                # 视频或其他文件
+                await event.client.send_file(
+                    event.chat_id,
+                    file_path,
+                    supports_streaming=True,
+                    force_document=False,
+                )
 
     def register_handlers(self, client):
         """注册所有事件处理器"""
@@ -78,7 +96,7 @@ class EventHandler:
                         f"标题: {video.get('desc')}\n"
                         f"保存位置: {video.get('dest_path')}"
                     )
-                    await self.send_video_to_user(event, video.get("dest_path"))
+                    # await self.send_video_to_user(event, video.get("dest_path"))
                 else:
                     await event.reply("无法下载该抖音视频，请检查链接是否有效。")
             else:
@@ -96,8 +114,15 @@ class EventHandler:
             )
 
             if success:
-                await event.reply(f"✅ YouTube视频下载完成！\n" f"保存位置: {result}")
-                await self.send_video_to_user(event, result)
+                # 判断下载的文件类型
+                file_type = "视频"
+                if result.lower().endswith((".mp3", ".m4a", ".ogg", ".wav", ".flac")):
+                    file_type = "音频"
+
+                await event.reply(
+                    f"✅ YouTube{file_type}下载完成！\n" f"保存位置: {result}"
+                )
+                # await self.send_video_to_user(event, result)
             else:
                 await event.reply(f"❌ YouTube视频下载失败！\n" f"错误: {result}")
         except Exception as e:
@@ -122,7 +147,7 @@ class EventHandler:
                     f"文件名: {result['filename']}\n"
                     f"保存位置: {result['path']}"
                 )
-                await self.send_video_to_user(event, result["path"])
+                # await self.send_video_to_user(event, result["path"])
             else:
                 await event.reply(f"❌ 下载失败: {result}")
         except Exception as e:
@@ -143,7 +168,7 @@ class EventHandler:
                         f"标题: {video.get('title')}\n"
                         f"保存位置: {video.get('path')}"
                     )
-                    await self.send_video_to_user(message, video.get("path"))
+                    # await self.send_video_to_user(message, video.get("path"))
                     return True
             else:
                 await message.reply("下载B站视频失败,请检查链接是否有效")
