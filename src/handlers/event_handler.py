@@ -63,7 +63,6 @@ class EventHandler:
                 # 检查是否是YouTube链接
                 youtube_pattern = r"(https?://)?(www\.)?(youtube\.com|youtu\.be)/.*"
                 douyin_pattern = r"https://v\.douyin\.com/.*?/"
-                bilibili_pattern = r"https://www\.bilibili\.com/video/.*?"
                 is_youtube = bool(re.match(youtube_pattern, message_text))
                 is_douyin = bool(re.search(douyin_pattern, message_text))
                 is_bilibili = (

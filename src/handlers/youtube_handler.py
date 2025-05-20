@@ -65,6 +65,7 @@ class YouTubeHandler:
     async def download_video(self, url, status_callback=None):
         """下载YouTube视频（支持单个视频和播放列表）"""
         temp_cookie_file = None
+        url = url.replace("m.youtube.com", "www.youtube.com")
         try:
             if self.cookies:
                 temp_cookie_file = self._create_temp_cookie_file()
