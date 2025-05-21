@@ -11,6 +11,7 @@
 - 支持代理配置
 - 支持 Docker 部署
 - 支持定时发送消息
+- 支持消息转发功能（可按关键词过滤）
 - 文件自动分类存储
 - 支持 YouTube cookies 配置（用于下载会员内容）
 
@@ -151,6 +152,20 @@ scheduled_messages:
   - chat_id: "" # 目标群组/频道的ID或用户名
     message: "" # 要发送的消息内容
     time: "08:00" # 每天发送消息的时间，24小时制
+
+# 消息转发配置，支持多个（可选）
+transfer_message:
+  - source_chat: "" # 源频道/群组ID或用户名（必须是用户账号能访问的）
+    target_chat: "" # 目标接收者（可以是用户名、ID或群组/频道ID）
+    include_keywords: [] # 关键词列表，留空表示转发所有消息
+
+  - source_chat: "" # 源频道/群组ID或用户名
+    target_chat: "" # 目标接收者
+    include_keywords: # 只转发包含指定关键词的消息
+      - "关键词1"
+      - "关键词2"
+
+# 注意：消息转发功能需要启用用户账号（user_account.enabled=true）
 
 # 抖音下载配置
 douyin:

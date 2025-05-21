@@ -26,6 +26,7 @@ def load_config():
             "cookies": "",
         },
         "scheduled_messages": [],
+        "transfer_message": [],
         "log_level": "INFO",
         "proxy": {
             "enabled": False,

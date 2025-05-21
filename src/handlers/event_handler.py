@@ -19,6 +19,7 @@ class EventHandler:
         )
         self.bilibili_handler = BilibiliHandler(config.get("bilibili", {}))
         self.send_file = config.get("send_file", False)
+        self.transfer_config = config.get("transfer_message", [])
 
     async def send_video_to_user(self, event, file_path):
         """统一的发送文件方法"""
@@ -45,6 +46,67 @@ class EventHandler:
                     force_document=False,
                 )
 
+    def register_message_transfer(self, client):
+        """注册消息转发处理程序（适用于用户客户端）"""
+        if not self.transfer_config:
+            logger.info("未配置消息转发规则，跳过注册转发处理程序")
+            return
+
+        logger.info(
+            f"正在注册消息转发处理程序，共有 {len(self.transfer_config)} 条规则"
+        )
+
+        @client.on(events.NewMessage)
+        async def handle_message_transfer(event):
+            """处理来自任何聊天的新消息并进行转发"""
+            try:
+                # 获取当前聊天的ID
+                chat = await event.get_chat()
+                group_id = event.chat_id
+                chat_username = getattr(chat, "username", None)
+
+                # 遍历转发配置
+                for transfer in self.transfer_config:
+                    source_chat = transfer.get("source_chat")
+
+                    # 检查是否匹配源聊天（通过ID或用户名）
+                    source_match = False
+                    if source_chat and (
+                        str(group_id) == str(source_chat)
+                        or (chat_username and f"@{chat_username}" == source_chat)
+                    ):
+                        source_match = True
+
+                    if source_match:
+                        target_chat = transfer.get("target_chat")
+                        include_keywords = transfer.get("include_keywords", [])
+
+                        # 检查是否需要根据关键词过滤
+                        should_transfer = True
+                        if include_keywords:
+                            message_text = (
+                                event.message.text if event.message.text else ""
+                            )
+                            # 如果指定了关键词，至少匹配一个关键词才转发
+                            should_transfer = any(
+                                keyword in message_text for keyword in include_keywords
+                            )
+
+                        if should_transfer:
+                            try:
+                                # 转发消息
+                                await client.forward_messages(
+                                    target_chat, event.message
+                                )
+                                logger.info(
+                                    f"已将消息从 {source_chat} 转发到 {target_chat}"
+                                )
+                            except Exception as e:
+                                logger.error(f"转发消息时出错: {str(e)}")
+
+            except Exception as e:
+                logger.error(f"处理消息转发时出错: {str(e)}")
+
     def register_handlers(self, client):
         """注册所有事件处理器"""
 
@@ -57,6 +119,8 @@ class EventHandler:
         async def handle_message(event):
             """处理新消息"""
             try:
+                # 先检查是否需要转发消息
+                await self._handle_message_transfer(event)
 
                 message_text = event.message.text if event.message.text else ""
 
@@ -81,6 +145,39 @@ class EventHandler:
             except Exception as e:
                 logger.error(f"处理消息时出错: {str(e)}")
                 await event.reply(f"处理消息时出错: {str(e)}")
+
+    async def _handle_message_transfer(self, event):
+        """处理消息转发（适用于机器人客户端）"""
+        if not self.transfer_config:
+            return
+
+        # 获取当前聊天的ID
+        chat_id = event.chat_id
+
+        # 遍历转发配置
+        for transfer in self.transfer_config:
+            source_chat = transfer.get("source_chat")
+            target_chat = transfer.get("target_chat")
+            include_keywords = transfer.get("include_keywords", [])
+
+            # 检查是否匹配源聊天
+            if str(chat_id) == str(source_chat):
+                # 检查是否需要根据关键词过滤
+                should_transfer = True
+                if include_keywords:
+                    message_text = event.message.text if event.message.text else ""
+                    # 如果指定了关键词，至少匹配一个关键词才转发
+                    should_transfer = any(
+                        keyword in message_text for keyword in include_keywords
+                    )
+
+                if should_transfer:
+                    try:
+                        # 转发消息
+                        await event.client.forward_messages(target_chat, event.message)
+                        logger.info(f"已将消息从 {source_chat} 转发到 {target_chat}")
+                    except Exception as e:
+                        logger.error(f"转发消息时出错: {str(e)}")
 
     async def _handle_douyin_message(self, event):
         try:

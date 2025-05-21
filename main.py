@@ -60,8 +60,12 @@ async def main():
         if bot_client:
             event_handler.register_handlers(bot_client)
 
-        # 初始化定时任务
+        # 初始化定时任务和消息转发功能
         if user_client:
+            # 注册消息转发处理程序（在用户客户端上）
+            event_handler.register_message_transfer(user_client)
+
+            # 初始化定时任务
             scheduler_service.initialize_tasks(
                 user_client, config.get("scheduled_messages", [])
             )
