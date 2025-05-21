@@ -93,6 +93,7 @@ class TelegramHandler:
             # 移动文件到目标目录
             ext = os.path.splitext(downloaded_file)[1]
             target_path = os.path.join(target_dir, f"{filename}{ext}")
+            target_path = target_path.replace(".x-flac", "").replace(".mp4.m4a", ".m4a")
             if os.path.exists(target_path):
                 filename = f"{filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
                 target_path = os.path.join(target_dir, filename)
