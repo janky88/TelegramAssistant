@@ -142,6 +142,7 @@ bot_account:
 youtube_download:
   format: "bv*+ba/best" # 视频质量，具体参考yt-dlp的格式选择
   cookies: "" # YouTube cookies（可选，用于下载会员内容）
+  download_list: false # 是否下载播放列表，设为true才会下载整个列表，否则只下载当前视频
 
 # 定时消息配置，支持多个（可选）
 scheduled_messages:
@@ -203,6 +204,7 @@ proxy:
 
    - `format`：视频质量选择
    - `cookies`：用于下载会员内容，需要提供 cookies 字符串
+   - `download_list`：是否下载播放列表，设为 true 才会下载整个列表，否则只下载当前视频
 
 4. **定时消息**：
 

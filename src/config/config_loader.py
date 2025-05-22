@@ -24,6 +24,7 @@ def load_config():
         "youtube_download": {
             "format": "bv*+ba/best",
             "cookies": "",
+            "download_list": False,
         },
         "scheduled_messages": [],
         "transfer_message": [],

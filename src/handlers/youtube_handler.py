@@ -15,6 +15,7 @@ class YouTubeHandler:
         self.yt_format = config["youtube_download"].get("format", "bv*+ba/best")
         self.cookies = config["youtube_download"].get("cookies", "")
         self.audio_convert = config.get("youtube_audio_convert", {})
+        self.download_list = config["youtube_download"].get("download_list", False)
 
         # 确保目录存在
         ensure_dirs(YOUTUBE_TEMP_DIR, YOUTUBE_DEST_DIR, YOUTUBE_AUDIO_DIR)
@@ -76,6 +77,18 @@ class YouTubeHandler:
             is_playlist = "list" in url or url.endswith("/videos")
 
             if is_playlist:
+                # 检查是否允许下载播放列表
+                if not self.download_list:
+                    single_url = (
+                        self._extract_single_video_url(url) if "list" in url else url
+                    )
+                    if status_callback:
+                        await status_callback(
+                            "检测到播放列表，但配置不允许下载播放列表，将仅下载当前视频..."
+                        )
+                    return await self._handle_single_video(
+                        single_url, ydl_opts, status_callback
+                    )
                 return await self._handle_playlist(url, ydl_opts, status_callback)
             else:
                 return await self._handle_single_video(url, ydl_opts, status_callback)
@@ -86,6 +99,15 @@ class YouTubeHandler:
         finally:
             if temp_cookie_file and os.path.exists(temp_cookie_file):
                 os.unlink(temp_cookie_file)
+
+    def _extract_single_video_url(self, url):
+        """从播放列表URL中提取单个视频的URL"""
+        # 尝试从带有播放列表的URL中提取视频ID
+        video_id_match = re.search(r"(?:v=|/)([0-9A-Za-z_-]{11})(?:[&?#]|$)", url)
+        if video_id_match:
+            video_id = video_id_match.group(1)
+            return f"https://www.youtube.com/watch?v={video_id}"
+        return url
 
     async def _handle_playlist(self, url, ydl_opts, status_callback):
         """处理播放列表下载"""
