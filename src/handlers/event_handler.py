@@ -80,7 +80,7 @@ class EventHandler:
                     if source_match:
                         target_chat = transfer.get("target_chat")
                         include_keywords = transfer.get("include_keywords", [])
-
+                        direct = transfer.get("direct", False)
                         # 检查是否需要根据关键词过滤
                         should_transfer = True
                         if include_keywords:
@@ -94,13 +94,32 @@ class EventHandler:
 
                         if should_transfer:
                             try:
-                                # 转发消息
-                                await client.forward_messages(
-                                    target_chat, event.message
-                                )
-                                logger.info(
-                                    f"已将消息从 {source_chat} 转发到 {target_chat}"
-                                )
+                                if direct:
+                                    # 检查消息是否包含photo
+                                    if event.message.photo:
+                                        # 如果有照片，发送照片和文本
+                                        await client.send_message(
+                                            target_chat,
+                                            (
+                                                event.message.text
+                                                if event.message.text
+                                                else ""
+                                            ),
+                                            file=event.message.photo,
+                                        )
+                                    else:
+                                        # 没有照片，只发送文本
+                                        await client.send_message(
+                                            target_chat, event.message.text
+                                        )
+                                else:
+                                    # 转发消息
+                                    await client.forward_messages(
+                                        target_chat, event.message
+                                    )
+                                    logger.info(
+                                        f"已将消息从 {source_chat} 转发到 {target_chat}"
+                                    )
                             except Exception as e:
                                 logger.error(f"转发消息时出错: {str(e)}")
 

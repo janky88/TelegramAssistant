@@ -12,6 +12,7 @@ def load_config():
     default_config = {
         "api_id": "",
         "api_hash": "",
+        "api_key": "tgas",
         "user_account": {
             "enabled": False,
             "phone": "",
@@ -19,6 +20,7 @@ def load_config():
         },
         "bot_account": {
             "token": "",
+            "id": "",
             "session_name": "bot_session",
         },
         "youtube_download": {
