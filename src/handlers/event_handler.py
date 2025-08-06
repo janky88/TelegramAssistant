@@ -1,5 +1,6 @@
 import re
 import logging
+import os
 from telethon import events
 from .telegram_handler import TelegramHandler
 from .youtube_handler import YouTubeHandler
@@ -20,6 +21,16 @@ class EventHandler:
         self.bilibili_handler = BilibiliHandler(config.get("bilibili", {}))
         self.send_file = config.get("send_file", False)
         self.transfer_config = config.get("transfer_message", [])
+
+        # 创建临时目录
+        self.temp_dir = os.path.join(
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            ),
+            "temp",
+        )
+        if not os.path.exists(self.temp_dir):
+            os.makedirs(self.temp_dir)
 
     async def send_video_to_user(self, event, file_path):
         """统一的发送文件方法"""
@@ -95,9 +106,19 @@ class EventHandler:
                         if should_transfer:
                             try:
                                 if direct:
+                                    logger.info(f"直接转发消息: {event.message.text}")
                                     # 检查消息是否包含photo
                                     if event.message.photo:
-                                        # 如果有照片，发送照片和文本
+                                        # 如果有照片，下载到临时文件再发送
+                                        temp_file_path = os.path.join(
+                                            self.temp_dir,
+                                            f"photo_{event.message.id}.jpg",
+                                        )
+                                        await event.message.download_media(
+                                            temp_file_path
+                                        )
+
+                                        # 发送文本和照片
                                         await client.send_message(
                                             target_chat,
                                             (
@@ -105,8 +126,12 @@ class EventHandler:
                                                 if event.message.text
                                                 else ""
                                             ),
-                                            file=event.message.photo,
+                                            file=temp_file_path,
                                         )
+
+                                        # 删除临时文件
+                                        if os.path.exists(temp_file_path):
+                                            os.remove(temp_file_path)
                                     else:
                                         # 没有照片，只发送文本
                                         await client.send_message(
@@ -192,9 +217,36 @@ class EventHandler:
 
                 if should_transfer:
                     try:
-                        # 转发消息
-                        await event.client.forward_messages(target_chat, event.message)
-                        logger.info(f"已将消息从 {source_chat} 转发到 {target_chat}")
+                        # 检查消息是否包含photo
+                        if event.message.photo:
+                            # 如果有照片，下载到临时文件再发送
+                            temp_file_path = os.path.join(
+                                self.temp_dir, f"photo_{event.message.id}.jpg"
+                            )
+                            await event.message.download_media(temp_file_path)
+
+                            # 发送文本和照片
+                            await event.client.send_message(
+                                target_chat,
+                                (event.message.text if event.message.text else ""),
+                                file=temp_file_path,
+                            )
+
+                            # 删除临时文件
+                            if os.path.exists(temp_file_path):
+                                os.remove(temp_file_path)
+
+                            logger.info(
+                                f"已将图文消息从 {source_chat} 发送到 {target_chat}"
+                            )
+                        else:
+                            # 转发消息
+                            await event.client.forward_messages(
+                                target_chat, event.message
+                            )
+                            logger.info(
+                                f"已将消息从 {source_chat} 转发到 {target_chat}"
+                            )
                     except Exception as e:
                         logger.error(f"转发消息时出错: {str(e)}")
 
