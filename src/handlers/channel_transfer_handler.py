@@ -1,13 +1,16 @@
 import logging
 import asyncio
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetHistoryRequest
 from telethon.tl.types import Channel, MessageEntityTextUrl
 from telethon.errors import FloodWaitError
 
 logger = logging.getLogger(__name__)
+
+# 定义上海时区（UTC+8）
+SHANGHAI_TIMEZONE = timezone(timedelta(hours=8))
 
 
 class ChannelTransferHandler:
@@ -67,11 +70,11 @@ class ChannelTransferHandler:
                 logger.error("未能获取源频道或目标频道实体")
                 return 0
 
-            # 将 since_date 转换为 UTC 时区的 aware datetime 对象
-            if since_date.tzinfo is None:
-                since_date = since_date.replace(tzinfo=timezone.utc)
-
-            logger.info(f"使用UTC时区的起始日期: {since_date.isoformat()}")
+            # 将日期转换为时间戳（秒）
+            since_timestamp = since_date.timestamp()
+            logger.info(
+                f"使用时间戳作为起始时间: {since_timestamp} ({since_date.strftime('%Y-%m-%d %H:%M:%S')})"
+            )
 
             # 获取频道消息历史
             messages = []
@@ -100,31 +103,42 @@ class ChannelTransferHandler:
                 offset_id = history.messages[-1].id
                 total_count = len(history.messages)
                 total_messages += total_count
+                now_message_count = 0
 
                 # 过滤消息
                 for message in history.messages:
-                    # 检查消息日期是否晚于指定日期
-                    if message.date >= since_date:
+                    message_time_shanghai = message.date.astimezone(SHANGHAI_TIMEZONE)
+                    # 将消息日期转换为时间戳
+                    message_timestamp = message_time_shanghai.timestamp()
+
+                    # 使用时间戳直接比较
+                    if message_timestamp + 8 * 3600 >= since_timestamp:
                         messages.append(message)
-                    # 如果消息日期早于指定日期，记录但继续获取更早的消息
-                    else:
-                        logger.debug(
-                            f"消息日期 {message.date.isoformat()} 早于指定日期 {since_date.isoformat()}，跳过"
+                        now_message_count += 1
+                        logger.info(
+                            f"消息时间戳 {message_timestamp} ({message_time_shanghai.strftime('%Y-%m-%d %H:%M:%S')}) >= 起始时间戳 {since_timestamp} ({since_date.strftime('%Y-%m-%d %H:%M:%S')})，添加"
                         )
+                    else:
+                        logger.info(
+                            f"消息时间戳 {message_timestamp} ({message_time_shanghai.strftime('%Y-%m-%d %H:%M:%S')}) < 起始时间戳 {since_timestamp} ({since_date.strftime('%Y-%m-%d %H:%M:%S')})，跳过"
+                        )
+                        break
 
-                message_count = len(messages)
-                logger.info(f"当前已收集符合条件的消息数：{message_count}条")
-
-                # 如果本批次没有获取到任何消息，说明真正到达了频道的末尾
-                if not history.messages:
-                    logger.info("没有更多历史消息，退出获取循环")
+                if now_message_count < len(history.messages):
+                    logger.info(
+                        f"当前已收集符合条件的消息数：{now_message_count}条，跳过剩余消息"
+                    )
                     break
 
                 # 避免触发速率限制
                 await asyncio.sleep(1)
 
+            message_count = len(messages)
+            logger.info(f"当前已收集符合条件的消息数：{message_count}条")
+
             # 开始转发消息
             forwarded_count = 0
+            messages.reverse()
             for message in messages:
                 try:
                     # 提取消息文本和实体（保留格式化和链接）
@@ -225,9 +239,9 @@ class ChannelTransferHandler:
         else:
             since_date = datetime.strptime(since_date_str, "%Y-%m-%d %H:%M:%S")
 
-        # 将日期转换为 UTC 时区的 aware datetime
+        # 添加上海时区信息（方便日志显示）
         if since_date.tzinfo is None:
-            since_date = since_date.replace(tzinfo=timezone.utc)
+            since_date = since_date.replace(tzinfo=SHANGHAI_TIMEZONE)
 
         # 获取频道名称用于日志
         source_name = (
@@ -249,7 +263,10 @@ class ChannelTransferHandler:
             logger.info(f"成功转发 {count} 条消息")
 
             # 更新since_date为当前时间，这样下次只会转发新消息
-            since_date = datetime.now().replace(tzinfo=timezone.utc)
+            since_date = datetime.now()
+            logger.info(
+                f"更新起始时间为当前时间: {since_date.strftime('%Y-%m-%d %H:%M:%S')}"
+            )
 
             # 等待指定的小时数
             logger.info(f"等待 {interval_hours} 小时后继续执行")

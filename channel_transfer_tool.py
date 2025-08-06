@@ -22,8 +22,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_DIR = os.path.join(BASE_DIR, "config")
 
 # 在这里设置参数
-SOURCE_CHANNEL = -1002343015438  # 源频道的用户名或ID，注意不要加引号
-TARGET_CHANNEL = "@honorable_man123"  # 目标频道的用户名或ID
+SOURCE_CHANNEL = ""  # 源频道的用户名或ID，注意不要加引号
+TARGET_CHANNEL = ""  # 目标频道的用户名或ID
 SINCE_DATE = "2025-08-05 23:35:00"  # 只转发该日期之后的消息，格式：YYYY-MM-DD HH:MM:SS
 RUN_ONCE = True  # 设置为True表示只执行一次转发，设置为False表示定时转发
 INTERVAL_HOURS = 24  # 定时转发的间隔时间（小时），仅当RUN_ONCE=False时生效
