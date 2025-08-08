@@ -146,11 +146,11 @@ youtube_download:
 
 # 定时消息配置，支持多个（可选）
 scheduled_messages:
-  - chat_id: "" # 目标群组/频道的ID或用户名
+  - chat_id: "" # 目标群组/频道的用户名
     message: "" # 要发送的消息内容
     time: "08:00" # 每天发送消息的时间，24小时制
 
-  - chat_id: "" # 目标群组/频道的ID或用户名
+  - chat_id: "" # 目标群组/频道的用户名
     message: "" # 要发送的消息内容
     time: "08:00" # 每天发送消息的时间，24小时制
 
