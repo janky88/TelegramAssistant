@@ -8,3 +8,4 @@ temp/
 /config/
 logs/
 *.db
+channel_transfer_tool.py

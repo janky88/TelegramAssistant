@@ -78,7 +78,7 @@ class ClientService:
             return client
         except Exception as e:
             logger.error(f"机器人客户端启动失败: {str(e)}")
-            raise
+            return None
 
     async def disconnect_all(self):
         """断开所有客户端连接"""
