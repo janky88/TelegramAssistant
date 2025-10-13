@@ -1,7 +1,7 @@
 import re
 import logging
 import os
-from telethon import events
+from telethon import events, errors
 from .telegram_handler import TelegramHandler
 from .youtube_handler import YouTubeHandler
 from .douyin_handler import CustomDouyinHandler
@@ -21,6 +21,8 @@ class EventHandler:
         self.bilibili_handler = BilibiliHandler(config.get("bilibili", {}))
         self.send_file = config.get("send_file", False)
         self.transfer_config = config.get("transfer_message", [])
+        # 缓存已获取的实体，避免重复查询
+        self.entity_cache = {}
 
         # 创建临时目录
         self.temp_dir = os.path.join(
@@ -31,6 +33,51 @@ class EventHandler:
         )
         if not os.path.exists(self.temp_dir):
             os.makedirs(self.temp_dir)
+
+    async def get_entity_safely(self, client, entity_id):
+        """安全获取实体，处理各种可能的错误情况"""
+        # 先检查缓存
+        cache_key = str(entity_id)
+        if cache_key in self.entity_cache:
+            return self.entity_cache[cache_key]
+
+        try:
+            # 如果是整数ID或以-100开头的字符串（频道/群组ID格式）
+            if isinstance(entity_id, int) or (
+                isinstance(entity_id, str)
+                and (entity_id.lstrip("-").isdigit() or entity_id.startswith("-100"))
+            ):
+                entity_id_int = int(entity_id)
+                # 遍历对话列表查找匹配的ID
+                async for dialog in client.iter_dialogs():
+                    if dialog.id == entity_id_int:
+                        logger.info(f"已找到频道/群组: {dialog.name} (ID: {dialog.id})")
+                        # 缓存实体
+                        self.entity_cache[cache_key] = dialog.entity
+                        return dialog.entity
+
+                # 如果遍历完所有对话后仍未找到
+                logger.error(f"未找到ID为 {entity_id} 的频道/群组")
+                return None
+            else:
+                # 对于用户名（@username格式），可以直接使用get_entity
+                entity = await client.get_entity(entity_id)
+                # 缓存实体
+                self.entity_cache[cache_key] = entity
+                return entity
+
+        except errors.FloodWaitError as e:
+            logger.error(f"请求过于频繁，需要等待 {e.seconds} 秒")
+            return None
+        except errors.UsernameNotOccupiedError:
+            logger.error(f"用户名 {entity_id} 不存在")
+            return None
+        except ValueError as e:
+            logger.error(f"实体获取失败: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"获取实体时发生未知错误: {str(e)}")
+            return None
 
     async def send_video_to_user(self, event, file_path):
         """统一的发送文件方法"""
@@ -105,6 +152,16 @@ class EventHandler:
 
                         if should_transfer:
                             try:
+                                # 先获取目标频道/群组的实体
+                                target_entity = await self.get_entity_safely(
+                                    client, target_chat
+                                )
+                                if not target_entity:
+                                    logger.error(
+                                        f"无法获取目标频道/群组实体: {target_chat}，跳过转发"
+                                    )
+                                    continue
+
                                 if direct:
                                     logger.info(f"直接转发消息: {event.message.text}")
                                     # 检查消息是否包含photo
@@ -120,7 +177,7 @@ class EventHandler:
 
                                         # 发送文本和照片
                                         await client.send_message(
-                                            target_chat,
+                                            target_entity,
                                             (
                                                 event.message.text
                                                 if event.message.text
@@ -135,12 +192,12 @@ class EventHandler:
                                     else:
                                         # 没有照片，只发送文本
                                         await client.send_message(
-                                            target_chat, event.message.text
+                                            target_entity, event.message.text
                                         )
                                 else:
                                     # 转发消息
                                     await client.forward_messages(
-                                        target_chat, event.message
+                                        target_entity, event.message
                                     )
                                     logger.info(
                                         f"已将消息从 {source_chat} 转发到 {target_chat}"
@@ -217,6 +274,16 @@ class EventHandler:
 
                 if should_transfer:
                     try:
+                        # 先获取目标频道/群组的实体
+                        target_entity = await self.get_entity_safely(
+                            event.client, target_chat
+                        )
+                        if not target_entity:
+                            logger.error(
+                                f"无法获取目标频道/群组实体: {target_chat}，跳过转发"
+                            )
+                            continue
+
                         # 检查消息是否包含photo
                         if event.message.photo:
                             # 如果有照片，下载到临时文件再发送
@@ -227,7 +294,7 @@ class EventHandler:
 
                             # 发送文本和照片
                             await event.client.send_message(
-                                target_chat,
+                                target_entity,
                                 (event.message.text if event.message.text else ""),
                                 file=temp_file_path,
                             )
@@ -242,7 +309,7 @@ class EventHandler:
                         else:
                             # 转发消息
                             await event.client.forward_messages(
-                                target_chat, event.message
+                                target_entity, event.message
                             )
                             logger.info(
                                 f"已将消息从 {source_chat} 转发到 {target_chat}"

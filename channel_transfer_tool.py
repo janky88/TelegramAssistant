@@ -24,9 +24,10 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 # 在这里设置参数
 SOURCE_CHANNEL = ""  # 源频道的用户名或ID，注意不要加引号
 TARGET_CHANNEL = ""  # 目标频道的用户名或ID
-SINCE_DATE = "2025-08-05 23:35:00"  # 只转发该日期之后的消息，格式：YYYY-MM-DD HH:MM:SS
+SINCE_DATE = "2025-10-1 9:35:00"  # 只转发该日期之后的消息，格式：YYYY-MM-DD HH:MM:SS
 RUN_ONCE = True  # 设置为True表示只执行一次转发，设置为False表示定时转发
 INTERVAL_HOURS = 24  # 定时转发的间隔时间（小时），仅当RUN_ONCE=False时生效
+DIRECT = True  # 是否直接转发消息
 
 
 async def get_entity_safely(client, entity_id):
@@ -120,7 +121,7 @@ async def main():
                 f"开始从 {source_entity.title} 向 {target_entity.title} 转发消息..."
             )
             count = await handler.transfer_messages(
-                source_entity, target_entity, since_date
+                source_entity, target_entity, since_date, direct=DIRECT
             )
             logger.info(f"转发完成，共转发 {count} 条消息")
         else:

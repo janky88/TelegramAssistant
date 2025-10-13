@@ -42,7 +42,9 @@ class ChannelTransferHandler:
             logger.error(f"获取频道实体失败: {str(e)}")
             return None
 
-    async def transfer_messages(self, source_channel, target_channel, since_date):
+    async def transfer_messages(
+        self, source_channel, target_channel, since_date, direct=False
+    ):
         """
         转发指定日期后的消息
 
@@ -141,6 +143,10 @@ class ChannelTransferHandler:
             messages.reverse()
             for message in messages:
                 try:
+                    if direct:
+                        await self.client.forward_messages(target_entity, message)
+                        logger.info("已直接转发消息")
+                        continue
                     # 提取消息文本和实体（保留格式化和链接）
                     text = message.message
                     entities = message.entities
