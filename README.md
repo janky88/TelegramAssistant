@@ -12,6 +12,7 @@
 - 支持 Docker 部署
 - 支持定时发送消息
 - 支持消息转发功能（可按关键词过滤）
+- 支持权限控制（可限制特定用户使用下载功能）
 - 文件自动分类存储
 - 支持 YouTube cookies 配置（用于下载会员内容）
 
@@ -176,6 +177,12 @@ douyin:
 bilibili:
   cookie: "" # Bilibili cookies（可选，用于下载Bilibili视频）
 
+# 权限控制配置（可选）
+allowed_chat_ids: [] # 允许使用视频下载功能的chat_id列表，留空表示允许所有用户
+# 示例：
+# allowed_chat_ids:
+#   - 123456789        # 个人chat_id
+
 # 日志级别配置
 log_level: "INFO" # 可选：DEBUG, INFO, WARNING, ERROR
 
@@ -221,7 +228,14 @@ proxy:
    - `cookie`：用于下载抖音视频，需要提供 cookies 字符串
 
 7. **Bilibili 下载配置**：
+
    - `cookie`：用于下载 Bilibili 视频，需要提供 cookies 字符串
+
+8. **权限控制配置**：
+   - `allowed_chat_ids`：限制只有指定的 chat_id 才能使用视频下载功能
+   - 留空（`[]`）表示允许所有用户使用
+   - 支持个人 chat_id、群组 chat_id 和用户名
+   - 如何获取 chat_id：未授权用户尝试使用时会在日志中记录其 chat_id
 
 ## 使用方法
 
@@ -236,6 +250,38 @@ python main.py
 - 发送 `/start` 开始使用
 - 转发视频或发送 YouTube 链接给机器人
 - 机器人会自动下载并保存到指定目录
+
+## 权限控制
+
+如果你希望限制只有特定用户才能使用视频下载功能，可以配置 `allowed_chat_ids`：
+
+为空则所有人都可以使用
+
+### 配置示例：
+
+```yaml
+# 允许所有用户（默认）
+allowed_chat_ids: []
+
+# 只允许特定用户
+allowed_chat_ids:
+  - 123456789        # 你的个人chat_id
+```
+
+### 获取 chat_id 的方法：
+
+1. 保持 `allowed_chat_ids` 为空列表
+2. 启动机器人后，让需要授权的用户尝试发送视频链接
+3. 查看日志，会显示类似：`WARNING - 未授权的chat_id尝试下载YouTube视频: 123456789`
+4. 将显示的 chat_id 添加到配置文件中
+5. 重启机器人使配置生效
+
+### 权限功能说明：
+
+- ✅ 支持的功能：YouTube、抖音、B 站、Telegram 媒体文件下载
+- ✅ 未授权用户会收到友好提示："❌ 抱歉，您没有权限使用此功能。"
+- ✅ 所有未授权访问尝试都会记录在日志中
+- ✅ 支持个人 ID、群组 ID 和用户名格式
 
 ## 文件存储结构
 
@@ -258,6 +304,7 @@ downloads/
 - 建议使用代理以提高下载速度和稳定性
 - 抖音和 Bilibili 下载功能需要提供 cookies
 - 文件会按类型自动分类存储
+- 如需限制使用权限，请在配置文件中设置 `allowed_chat_ids`，未授权用户的 chat_id 会记录在日志中
 
 ## 许可证
 

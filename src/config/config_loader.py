@@ -28,6 +28,7 @@ def load_config():
             "cookies": "",
             "download_list": False,
         },
+        "allowed_chat_ids": [],
         "scheduled_messages": [],
         "transfer_message": [],
         "log_level": "INFO",

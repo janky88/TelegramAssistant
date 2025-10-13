@@ -21,6 +21,8 @@ class EventHandler:
         self.bilibili_handler = BilibiliHandler(config.get("bilibili", {}))
         self.send_file = config.get("send_file", False)
         self.transfer_config = config.get("transfer_message", [])
+        # 允许使用视频转发功能的chat_id列表
+        self.allowed_chat_ids = config.get("allowed_chat_ids", [])
         # 缓存已获取的实体，避免重复查询
         self.entity_cache = {}
 
@@ -33,6 +35,14 @@ class EventHandler:
         )
         if not os.path.exists(self.temp_dir):
             os.makedirs(self.temp_dir)
+
+    def is_chat_allowed(self, chat_id):
+        """检查chat_id是否在允许列表中"""
+        # 如果allowed_chat_ids为空列表，则允许所有
+        if not self.allowed_chat_ids:
+            return True
+        # 检查chat_id是否在允许列表中（支持字符串和整数比较）
+        return str(chat_id) in [str(allowed_id) for allowed_id in self.allowed_chat_ids]
 
     async def get_entity_safely(self, client, entity_id):
         """安全获取实体，处理各种可能的错误情况"""
@@ -318,6 +328,12 @@ class EventHandler:
                         logger.error(f"转发消息时出错: {str(e)}")
 
     async def _handle_douyin_message(self, event):
+        # 检查权限
+        if not self.is_chat_allowed(event.chat_id):
+            logger.warning(f"未授权的chat_id尝试下载抖音视频: {event.chat_id}")
+            await event.reply("❌ 抱歉，您没有权限使用此功能。")
+            return
+
         try:
             match = re.findall(r"https?://v\.douyin\.com/.*?/", event.message.text)
             if match:
@@ -340,6 +356,12 @@ class EventHandler:
 
     async def _handle_youtube_message(self, event):
         """处理YouTube链接消息"""
+        # 检查权限
+        if not self.is_chat_allowed(event.chat_id):
+            logger.warning(f"未授权的chat_id尝试下载YouTube视频: {event.chat_id}")
+            await event.reply("❌ 抱歉，您没有权限使用此功能。")
+            return
+
         status_message = await event.reply("开始解析YouTube下载链接...")
         try:
             success, result = await self.youtube_handler.download_video(
@@ -371,6 +393,12 @@ class EventHandler:
 
     async def _handle_telegram_media(self, event):
         """处理Telegram媒体消息"""
+        # 检查权限
+        if not self.is_chat_allowed(event.chat_id):
+            logger.warning(f"未授权的chat_id尝试下载Telegram媒体: {event.chat_id}")
+            await event.reply("❌ 抱歉，您没有权限使用此功能。")
+            return
+
         status_message = await event.reply("开始下载媒体文件...")
         try:
             success, result = await self.telegram_handler.process_media(event)
@@ -389,6 +417,12 @@ class EventHandler:
 
     async def handle_bilibili_message(self, message):
         """处理消息"""
+        # 检查权限
+        if not self.is_chat_allowed(message.chat_id):
+            logger.warning(f"未授权的chat_id尝试下载B站视频: {message.chat_id}")
+            await message.reply("❌ 抱歉，您没有权限使用此功能。")
+            return False
+
         try:
             await message.reply("正在下载B站视频，请稍候...")
             url = re.findall(
