@@ -148,13 +148,25 @@ class EventHandler:
                     if source_match:
                         target_chat = transfer.get("target_chat")
                         include_keywords = transfer.get("include_keywords", [])
+                        exclude_words = transfer.get("exclude_words", [])
                         direct = transfer.get("direct", False)
                         # 检查是否需要根据关键词过滤
                         should_transfer = True
-                        if include_keywords:
-                            message_text = (
-                                event.message.text if event.message.text else ""
-                            )
+                        message_text = event.message.text if event.message.text else ""
+
+                        # 首先检查排除词（优先级最高）
+                        if exclude_words:
+                            if any(
+                                exclude_word in message_text
+                                for exclude_word in exclude_words
+                            ):
+                                should_transfer = False
+                                logger.info(
+                                    f"消息包含排除词，跳过转发: {message_text[:50]}..."
+                                )
+
+                        # 然后检查包含词
+                        if should_transfer and include_keywords:
                             # 如果指定了关键词，至少匹配一个关键词才转发
                             should_transfer = any(
                                 keyword in message_text for keyword in include_keywords
@@ -275,8 +287,19 @@ class EventHandler:
             if str(chat_id) == str(source_chat):
                 # 检查是否需要根据关键词过滤
                 should_transfer = True
-                if include_keywords:
-                    message_text = event.message.text if event.message.text else ""
+                message_text = event.message.text if event.message.text else ""
+
+                # 首先检查排除词（优先级最高）
+                exclude_words = transfer.get("exclude_words", [])
+                if exclude_words:
+                    if any(
+                        exclude_word in message_text for exclude_word in exclude_words
+                    ):
+                        should_transfer = False
+                        logger.info(f"消息包含排除词，跳过转发: {message_text[:50]}...")
+
+                # 然后检查包含词
+                if should_transfer and include_keywords:
                     # 如果指定了关键词，至少匹配一个关键词才转发
                     should_transfer = any(
                         keyword in message_text for keyword in include_keywords

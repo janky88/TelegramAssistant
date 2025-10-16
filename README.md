@@ -160,14 +160,22 @@ transfer_message:
   - source_chat: "" # 源频道/群组ID或用户名（必须是用户账号能访问的）
     target_chat: "" # 目标接收者（可以是用户名、ID或群组/频道ID）
     include_keywords: [] # 关键词列表，留空表示转发所有消息
+    exclude_words: [] # 排除词列表，包含这些词的消息不会被转发（优先级高于include_keywords）
 
   - source_chat: "" # 源频道/群组ID或用户名
     target_chat: "" # 目标接收者
     include_keywords: # 只转发包含指定关键词的消息
       - "关键词1"
       - "关键词2"
+    exclude_words: # 排除包含这些词的消息（优先级最高）
+      - "广告"
+      - "推广"
 
 # 注意：消息转发功能需要启用用户账号（user_account.enabled=true）
+# 关键词过滤逻辑：
+# 1. 首先检查exclude_words，如果消息包含任何排除词，则不转发
+# 2. 然后检查include_keywords，如果设置了包含词，则只有包含这些词的消息才会转发
+# 3. 如果include_keywords为空，则转发所有消息（除非被exclude_words排除）
 
 # 抖音下载配置
 douyin:
@@ -218,20 +226,29 @@ proxy:
    - 可配置多个定时消息任务
    - 支持指定发送时间和目标聊天
 
-5. **代理设置**：
+5. **消息转发配置**：
+
+   - `source_chat`：源频道/群组 ID 或用户名
+   - `target_chat`：目标接收者
+   - `include_keywords`：包含词列表，只有包含这些词的消息才会转发
+   - `exclude_words`：排除词列表，包含这些词的消息不会被转发（优先级最高）
+   - `direct`：是否直接发送消息内容而不是转发原消息
+   - 过滤逻辑：先检查排除词，再检查包含词
+
+6. **代理设置**：
 
    - 仅支持 socks5 代理
    - 建议在网络受限地区使用
 
-6. **抖音下载配置**：
+7. **抖音下载配置**：
 
    - `cookie`：用于下载抖音视频，需要提供 cookies 字符串
 
-7. **Bilibili 下载配置**：
+8. **Bilibili 下载配置**：
 
    - `cookie`：用于下载 Bilibili 视频，需要提供 cookies 字符串
 
-8. **权限控制配置**：
+9. **权限控制配置**：
    - `allowed_chat_ids`：限制只有指定的 chat_id 才能使用视频下载功能
    - 留空（`[]`）表示允许所有用户使用
    - 支持个人 chat_id、群组 chat_id 和用户名
