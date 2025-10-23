@@ -1,0 +1,15 @@
+.DS_Store
+bot_session.session
+bot_session.session-journal
+config.yaml.example
+*.pyc
+downloads/
+temp/
+/config/
+logs/
+*.db
+channel_transfer_tool.py
+extract_emails.py
+get_bot_messages.py
+quick_extract_emails.py
+quick_get_bot_messages.py

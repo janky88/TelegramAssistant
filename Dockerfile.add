@@ -1,0 +1,4 @@
+FROM shenxianmq/telegram_assistant_env:v1.0.1
+
+# 安装ffmpeg
+RUN pip install httpx[socks]
